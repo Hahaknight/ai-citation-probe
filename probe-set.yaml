@@ -1,7 +1,7 @@
 # probe-set.yaml — 探针集即协议(schema 草案 v0.1)
 # 项目名: ai-citation-probe(2026-09-22 owner 拍板, 原 TBD 占位名已替换)
 # canonical 宿主: https://github.com/Hahaknight/ai-citation-probe (M1 已建, public/MIT);
-# 本文件后续 PR 化入库, 入库前以本目录为权威版本。
+# 本文件已 PR 化入库，仓库内版本为权威版本。
 # Owner 槽位: Hermes(Phase 2 方法论即产品); 实现 review: codex_PM
 #
 # ── 协议规则(与 run manifest 的集成, 采纳 Claude_engineer 2026-09-21 集成点) ──
