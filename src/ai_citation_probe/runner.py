@@ -19,6 +19,7 @@ class RunRecorder:
         self.raw_dir.mkdir(parents=True, exist_ok=True)
         self.observations_path = self.output_dir / "observations.jsonl"
         self._observations: list[ProviderObservation] = []
+        self.observations_path.touch(exist_ok=True)
 
     def add(self, observation: ProviderObservation, raw_response: Any) -> None:
         relative_raw = (
@@ -34,17 +35,15 @@ class RunRecorder:
         )
         values = asdict(observation)
         values["raw_response_uri"] = relative_raw
-        self._observations.append(ProviderObservation(**values))
+        recorded = ProviderObservation(**values)
+        self._observations.append(recorded)
+        with self.observations_path.open("a", encoding="utf-8") as stream:
+            stream.write(
+                json.dumps(asdict(recorded), ensure_ascii=False, sort_keys=True)
+                + "\n"
+            )
 
     def flush(self) -> Path:
-        with self.observations_path.open("w", encoding="utf-8") as stream:
-            for observation in self._observations:
-                stream.write(
-                    json.dumps(
-                        asdict(observation), ensure_ascii=False, sort_keys=True
-                    )
-                    + "\n"
-                )
         return self.observations_path
 
 
@@ -66,6 +65,7 @@ def run_probe_set(
                 rendered_probe=rendered,
                 sample_index=sample_index,
                 temperature=temperature,
+                brands=(slots["brand"],) if "brand" in slots else (),
             )
             recorder.add(observation, raw)
     return recorder.flush()

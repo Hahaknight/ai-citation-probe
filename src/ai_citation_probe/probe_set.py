@@ -108,8 +108,8 @@ def parse_probe_set(value: dict[str, Any]) -> ProbeSet:
                 text=_require(raw, "text", context),
                 industry=_require(raw, "industry", context),
                 intent=intent,
-                language=raw.get("language") or defaults.get("language"),
-                region=raw.get("region") or defaults.get("region"),
+                language=_effective_value(raw, defaults, "language", context),
+                region=_effective_value(raw, defaults, "region", context),
                 slots=tuple(slots),
                 comparable_providers=tuple(comparable),
                 consumer_surface=surface,
@@ -125,6 +125,15 @@ def parse_probe_set(value: dict[str, Any]) -> ProbeSet:
         defaults=defaults,
         probes=tuple(probes),
     )
+
+
+def _effective_value(
+    raw: dict[str, Any], defaults: dict[str, Any], key: str, context: str
+) -> str:
+    value = raw.get(key) or defaults.get(key)
+    if not value:
+        raise ProbeSetError(f"{context}: missing required field '{key}'")
+    return str(value)
 
 
 def load_probe_set(path: str | Path) -> ProbeSet:

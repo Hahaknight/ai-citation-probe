@@ -118,12 +118,14 @@ class PerplexityProvider(CitationProvider):
         rendered_probe: str,
         sample_index: int,
         temperature: float,
+        brands: tuple[str, ...],
     ) -> ProviderObservation:
         observation, _ = self.run_with_response(
             probe_id=probe_id,
             rendered_probe=rendered_probe,
             sample_index=sample_index,
             temperature=temperature,
+            brands=brands,
         )
         return observation
 
@@ -134,6 +136,7 @@ class PerplexityProvider(CitationProvider):
         rendered_probe: str,
         sample_index: int,
         temperature: float,
+        brands: tuple[str, ...],
     ) -> tuple[ProviderObservation, dict[str, Any]]:
         api_key = self.api_key_resolver("PERPLEXITY_API_KEY")
         if not api_key:
@@ -153,10 +156,26 @@ class PerplexityProvider(CitationProvider):
                 json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
                 {"probe_id": probe_id, "sample_index": sample_index},
             )
-        except urllib.error.HTTPError as error:
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            TimeoutError,
+            OSError,
+        ) as error:
+            # HTTPError covers API 4xx/5xx in this transport. M1 maps all
+            # transport/API failures to refused_or_unsearchable; finer retry
+            # classes are planned with live-smoke hardening.
+            if isinstance(error, urllib.error.HTTPError):
+                body = error.read().decode("utf-8", "replace")
+                error_code = error.code
+            else:
+                body = str(error)
+                error_code = type(error).__name__
             raw = {
-                "error": error.code,
-                "body": error.read().decode("utf-8", "replace"),
+                "error": error_code,
+                "body": body,
+                "probe_id": probe_id,
+                "sample_index": sample_index,
             }
             return (
                 ProviderObservation(
@@ -165,7 +184,7 @@ class PerplexityProvider(CitationProvider):
                     model=self.profile.model,
                     sample_index=sample_index,
                     status="error",
-                    text_excerpt=raw["body"][:1000],
+                    text_excerpt=body[:1000],
                     evidence_category="refused_or_unsearchable",
                     latency_ms=int((time.monotonic() - started) * 1000),
                 ),
@@ -176,7 +195,18 @@ class PerplexityProvider(CitationProvider):
         citations = self._extract_citations(response)
         text = self._extract_text(response)
         tokens, cost = self._extract_usage(response)
-        category = "brand_with_citation" if citations else "brand_mentioned"
+        normalized_text = text.casefold()
+        brand_mentioned = any(
+            brand.casefold() in normalized_text for brand in brands if brand
+        )
+        if brand_mentioned and citations:
+            category = "brand_with_citation"
+        elif brand_mentioned:
+            category = "brand_mentioned"
+        elif citations:
+            category = "citation_only"
+        else:
+            category = "not_cited"
         return (
             ProviderObservation(
                 probe_id=probe_id,

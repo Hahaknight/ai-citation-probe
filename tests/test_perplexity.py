@@ -19,6 +19,7 @@ class PerplexityTests(unittest.TestCase):
             rendered_probe="What is Example?",
             sample_index=0,
             temperature=0,
+            brands=("Example",),
         )
 
         self.assertIs(response, raw)
@@ -36,4 +37,33 @@ class PerplexityTests(unittest.TestCase):
                 rendered_probe="x",
                 sample_index=0,
                 temperature=0,
+                brands=("x",),
+            )
+
+    def test_evidence_category_uses_brand_text_and_citations(self):
+        provider = PerplexityProvider(model="sonar")
+        provider.api_key_resolver = lambda name: "test-key"
+        citation = ["https://example.com"]
+
+        cases = [
+            ("Example text", True, "brand_with_citation"),
+            ("Example text", False, "brand_mentioned"),
+            ("Other text", True, "citation_only"),
+            ("Other text", False, "not_cited"),
+        ]
+        for text, has_citations, expected in cases:
+            provider.transport = lambda *args, text=text, has_citations=has_citations: {
+                "choices": [{"message": {"content": text}}],
+                "citations": citation if has_citations else [],
+            }
+            observation = provider.run(
+                probe_id="q-1",
+                rendered_probe="question",
+                sample_index=0,
+                temperature=0,
+                brands=("Example",),
+            )
+            self.assertEqual(
+                observation.evidence_category,
+                expected,
             )

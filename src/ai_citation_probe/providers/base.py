@@ -23,6 +23,7 @@ class CitationProvider(abc.ABC):
         rendered_probe: str,
         sample_index: int,
         temperature: float,
+        brands: tuple[str, ...],
     ) -> ProviderObservation:
         """Execute one probe sample and return normalized evidence."""
 
@@ -34,5 +35,6 @@ class CitationProvider(abc.ABC):
         rendered_probe: str,
         sample_index: int,
         temperature: float,
+        brands: tuple[str, ...],
     ) -> tuple[ProviderObservation, Any]:
         """Execute and retain the provider's raw response for evidence."""

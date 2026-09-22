@@ -27,6 +27,7 @@ EvidenceCategory = Literal[
     "brand_with_citation",
     "citation_only",
     "refused_or_unsearchable",
+    "not_cited",
 ]
 
 
