@@ -19,7 +19,9 @@ probe-set.yaml + provider profile
 ## Contracts
 
 - Probe set: versioned YAML owned by Phase 2. It carries semantic metadata and
-  declares which providers are comparable for each probe.
+  declares which providers are comparable for each probe. Its hash is computed
+  from the **parsed structure** after removing `meta.canonical_hash`; YAML
+  formatting and comments are irrelevant.
 - Run manifest: immutable record created before the first provider call. It
   stores the probe-set **version and canonical hash as a pair**, plus provider
   profile hash, model versions, sampling count, temperature, and time window.
@@ -27,7 +29,10 @@ probe-set.yaml + provider profile
 - Evidence: provider citations and extracted brand mentions, separate from
   model prose.
 - Metrics: only the public functions in `metrics.py`; report rendering cannot
-  invent alternative formulas.
+  invent alternative formulas. Cross-provider URL similarity reports both
+  `jaccard_union` (optimistic coverage) and `jaccard_intersect` (paired
+  samples). Comparisons across probe-set versions use only the intersection of
+  question IDs.
 - Costs: token/cost data accompanies every observation when the provider
   exposes it.
 

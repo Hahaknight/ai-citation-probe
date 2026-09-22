@@ -36,6 +36,35 @@ def jaccard(url_sets: Sequence[set[str] | None]) -> float | None:
     scores = []
     for index, left in enumerate(values[:-1]):
         for right in values[index + 1 :]:
-            union = left | right
-            scores.append(1.0 if not union else len(left & right) / len(union))
+            scores.append(_safe_pair_jaccard(left, right))
     return sum(scores) / len(scores)
+
+
+def _safe_pair_jaccard(left: set[str], right: set[str]) -> float:
+    union = left | right
+    return 1.0 if not union else len(left & right) / len(union)
+
+
+def jaccard_union(
+    provider_a: Sequence[set[str] | None], provider_b: Sequence[set[str] | None]
+) -> float | None:
+    """Compare each provider's citation pool using optimistic union semantics."""
+
+    if not provider_a or not provider_b:
+        return None
+    pool_a = set.union(*(value for value in provider_a if value is not None), set())
+    pool_b = set.union(*(value for value in provider_b if value is not None), set())
+    return _safe_pair_jaccard(pool_a, pool_b)
+
+
+def jaccard_intersect(
+    provider_a: Sequence[set[str] | None], provider_b: Sequence[set[str] | None]
+) -> float | None:
+    """Pair observations by sample index and exclude non-cited observations."""
+
+    scores = []
+    for left, right in zip(provider_a, provider_b, strict=False):
+        if left is None or right is None:
+            continue
+        scores.append(_safe_pair_jaccard(left, right))
+    return sum(scores) / len(scores) if scores else None
