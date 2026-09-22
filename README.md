@@ -1,4 +1,4 @@
-# ai-citation-probe (working title)
+# ai-citation-probe
 
 A reproducible measurement tool for AI citations. It does **not** promise to
 improve rankings. Its purpose is to make AI visibility measurements auditable:
@@ -7,8 +7,9 @@ and reports that can explain disagreement instead of hiding it behind a score.
 
 ## Status
 
-This is the Phase 1 skeleton. The remote GitHub repository and final package
-name have not been created yet.
+The Phase 1 skeleton is public. The M1 measurement core now validates the
+versioned probe-set protocol and runs Perplexity sonar with raw response,
+citation, token, cost, and latency capture.
 
 ## Design principles
 
@@ -27,7 +28,7 @@ name have not been created yet.
 ```text
 docs/architecture.md          # runtime data flow and integration contracts
 docs/provider-matrix.md       # provider capability and interpretation matrix
-src/ai_citation_probe/        # CLI and core implementation skeleton
+src/ai_citation_probe/        # CLI and M1 measurement core
 configs/providers.example.json
 examples/                     # example input/output (added with M2)
 tests/                        # unit tests for manifest and metric contracts
@@ -36,9 +37,19 @@ tests/                        # unit tests for manifest and metric contracts
 ## Current CLI
 
 ```bash
-python -m ai_citation_probe --help
-python -m ai_citation_probe --version
+PYTHONPATH=src python -m ai_citation_probe validate --probe-set probe-set.yaml
+PYTHONPATH=src python -m ai_citation_probe run \
+  --probe-set probe-set.yaml \
+  --profiles configs/providers.example.json \
+  --provider perplexity-sonar \
+  --run-id demo-001 \
+  --slot brand=Example \
+  --output-dir runs/demo-001
+PYTHONPATH=src python -m ai_citation_probe --version
 ```
+
+Perplexity runs read `PERPLEXITY_API_KEY` from the environment. API keys are
+never written to manifests, observations, raw responses, or logs.
 
 ## Development
 

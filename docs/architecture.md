@@ -45,9 +45,16 @@ they must not interpolate a plausible value or merge incompatible search modes.
 
 ## M1 acceptance
 
-1. A run fails closed if probe-set version/hash or provider profile hash is
-   missing or mismatched.
-2. One provider can execute a fixed probe set and emit JSONL observations.
-3. Each observation has model version, sample index, raw response URI, status,
-   cost when available, and explicit search/surface metadata.
-4. No API key is written into the manifest, observations, report, or logs.
+1. Probe-set loading fails closed when schema, required fields, IDs, or
+   `canonical_hash` are invalid or mismatched.
+2. Manifest construction records probe-set version/hash, samples, temperature,
+   time, and provider-profile hash.
+3. The first provider transport (Perplexity sonar) executes a fixed probe set
+   and emits JSONL observations.
+4. Each observation has model version, sample index, raw response URI, status,
+   citations, token usage, optional cost, and latency.
+5. No API key is written into the manifest, observations, report, or logs.
+
+Remaining for M1: integration smoke against a live key, explicit report-side
+surface grouping, and the PR-move of authoritative protocol files into this
+repository.
