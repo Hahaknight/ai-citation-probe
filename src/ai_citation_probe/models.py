@@ -65,6 +65,7 @@ class ProviderObservation:
     citations: tuple[Citation, ...] = ()
     evidence_category: EvidenceCategory | None = None
     cost_usd: float | None = None
+    token_usage: dict[str, int] = field(default_factory=dict)
     latency_ms: int | None = None
     raw_response_uri: str | None = None
 

@@ -2,7 +2,7 @@
 
 | Provider/profile | Search mode | Consumer surface equivalence | Citations | MVP use |
 | --- | --- | --- | --- | --- |
-| Perplexity sonar | `native_search` | `direct` | yes | Primary visible-citation measurement |
+| Perplexity sonar | `native_search` | `direct` | yes | Implemented in M1; primary visible-citation measurement |
 | Gemini grounding | `web_grounding` | `partial` | yes | Cross-engine divergence comparison |
 | OpenAI-compatible, search on | `web_grounding` | `partial` | profile-dependent | Only with explicit tool/search confirmation |
 | OpenAI-compatible, no search | `none` | `no` | no | Model capability baseline, not AI-search visibility |
