@@ -28,6 +28,13 @@ class MetricTests(unittest.TestCase):
         self.assertEqual(jaccard_union(provider_a, provider_b), 1 / 3)
         self.assertEqual(jaccard_intersect(provider_a, provider_b), 2 / 3)
 
+    def test_union_is_not_comparable_when_both_pools_are_empty(self):
+        self.assertIsNone(jaccard_union([set()], [set()]))
+
+    def test_intersect_rejects_unequal_sample_counts(self):
+        with self.assertRaises(ValueError):
+            jaccard_intersect([{"a.com"}], [])
+
 
 if __name__ == "__main__":
     unittest.main()

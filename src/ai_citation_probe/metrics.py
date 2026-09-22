@@ -48,12 +48,21 @@ def _safe_pair_jaccard(left: set[str], right: set[str]) -> float:
 def jaccard_union(
     provider_a: Sequence[set[str] | None], provider_b: Sequence[set[str] | None]
 ) -> float | None:
-    """Compare each provider's citation pool using optimistic union semantics."""
+    """Compare each provider's citation pool using optimistic union semantics.
 
+    If either provider has no citations, coverage similarity is not comparable.
+    """
+
+    comparable_a = [value for value in provider_a if value is not None]
+    comparable_b = [value for value in provider_b if value is not None]
+    if not comparable_a or not comparable_b:
+        return None
     if not provider_a or not provider_b:
         return None
-    pool_a = set.union(*(value for value in provider_a if value is not None), set())
-    pool_b = set.union(*(value for value in provider_b if value is not None), set())
+    pool_a = set.union(*comparable_a)
+    pool_b = set.union(*comparable_b)
+    if not pool_a or not pool_b:
+        return None
     return _safe_pair_jaccard(pool_a, pool_b)
 
 
@@ -62,8 +71,10 @@ def jaccard_intersect(
 ) -> float | None:
     """Pair observations by sample index and exclude non-cited observations."""
 
+    if len(provider_a) != len(provider_b):
+        raise ValueError("cross-provider Jaccard requires equal sample counts")
     scores = []
-    for left, right in zip(provider_a, provider_b, strict=False):
+    for left, right in zip(provider_a, provider_b, strict=True):
         if left is None or right is None:
             continue
         scores.append(_safe_pair_jaccard(left, right))

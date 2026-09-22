@@ -8,11 +8,14 @@ from typing import Any
 
 
 def canonical_json(value: Any) -> str:
-    """Serialize deterministically with sorted keys and LF endings."""
+    """Serialize deterministically as bare JSON.
+
+    No trailing newline is added: the serialized bytes are the hash input.
+    """
 
     return json.dumps(
         value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ) + "\n"
+    )
 
 
 def sha256_canonical(value: Any) -> str:

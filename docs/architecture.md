@@ -21,7 +21,8 @@ probe-set.yaml + provider profile
 - Probe set: versioned YAML owned by Phase 2. It carries semantic metadata and
   declares which providers are comparable for each probe. Its hash is computed
   from the **parsed structure** after removing `meta.canonical_hash`; YAML
-  formatting and comments are irrelevant.
+  formatting and comments are irrelevant. The hash input is bare canonical
+  JSON bytes with no trailing newline.
 - Run manifest: immutable record created before the first provider call. It
   stores the probe-set **version and canonical hash as a pair**, plus provider
   profile hash, model versions, sampling count, temperature, and time window.
