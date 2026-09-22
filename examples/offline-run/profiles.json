@@ -1,0 +1,16 @@
+[
+  {
+    "id": "perplexity-sonar",
+    "model": "sonar",
+    "search_mode": "native_search",
+    "surface_equivalence": "direct",
+    "supports_citations": true
+  },
+  {
+    "id": "openai-compatible",
+    "model": "gpt-example",
+    "search_mode": "none",
+    "surface_equivalence": "no",
+    "supports_citations": false
+  }
+]

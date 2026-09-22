@@ -48,6 +48,16 @@ PYTHONPATH=src python -m ai_citation_probe run \
 PYTHONPATH=src python -m ai_citation_probe --version
 ```
 
+After a run, render the offline report:
+
+```bash
+PYTHONPATH=src python -m ai_citation_probe report --run-dir runs/demo-001
+```
+
+The report separates direct/partial/proxy AI-search observations from no-search
+model-capability baselines. It emits observation counts and evidence groups; it
+does not create a synthetic ranking score.
+
 Perplexity runs read `PERPLEXITY_API_KEY` from the environment. API keys are
 never written to manifests, observations, raw responses, or logs.
 

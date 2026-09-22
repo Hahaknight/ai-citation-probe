@@ -1,0 +1,15 @@
+{
+  "schema": "run-manifest/0.1",
+  "run_id": "offline-example-001",
+  "created_at": "2026-09-22T00:00:00+00:00",
+  "probe_set_version": "0.1.1",
+  "probe_set_hash": "22cdd49ef0cb0d00a0d6e049ca66bd474ce94f953360506b3955069d0574ae42",
+  "providers": [],
+  "samples_per_probe": 2,
+  "temperature": 0,
+  "provider_profile_hash": "fixture",
+  "notes": {
+    "type": "synthetic offline fixture",
+    "not_a_real_measurement": true
+  }
+}
