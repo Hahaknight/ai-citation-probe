@@ -41,7 +41,7 @@ class ReportTests(unittest.TestCase):
                 "status": "error",
                 "citations": [],
                 "evidence_category": "refused_or_unsearchable",
-                "latency_ms": 50,
+                "latency_ms": 50.5,
             },
         ]
         profiles = {
@@ -53,6 +53,11 @@ class ReportTests(unittest.TestCase):
         surfaces = {row["provider_id"]: row["consumer_surface"] for row in rows}
         self.assertEqual(surfaces["search"], "direct")
         self.assertEqual(surfaces["no-search"], "no")
+        latencies = {
+            row["provider_id"]: row["mean_latency_ms"] for row in rows
+        }
+        self.assertEqual(latencies["no-search"], 50.5)
+        self.assertEqual(latencies["search"], 100)
 
         with tempfile.TemporaryDirectory() as directory:
             csv_path = render_csv(rows, Path(directory) / "summary.csv")

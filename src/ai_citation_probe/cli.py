@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -108,12 +109,16 @@ def main() -> int:
     if args.command == "run":
         return _run(args)
     if args.command == "report":
-        manifest = json.loads(
-            (Path(args.run_dir) / "manifest.json").read_text(encoding="utf-8")
-        )
-        csv_path, html_path = write_report(
-            run_dir=args.run_dir, manifest=manifest
-        )
+        try:
+            manifest = json.loads(
+                (Path(args.run_dir) / "manifest.json").read_text(encoding="utf-8")
+            )
+            csv_path, html_path = write_report(
+                run_dir=args.run_dir, manifest=manifest
+            )
+        except (FileNotFoundError, json.JSONDecodeError) as error:
+            print(f"error: cannot render report: {error}", file=sys.stderr)
+            return 2
         print(csv_path)
         print(html_path)
         return 0

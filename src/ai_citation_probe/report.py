@@ -80,9 +80,10 @@ def summarize_observations(
                 elif isinstance(citation, str):
                     urls.add(citation)
         latencies = [
-            int(value["latency_ms"])
+            float(value["latency_ms"])
             for value in values
-            if isinstance(value.get("latency_ms"), int)
+            if isinstance(value.get("latency_ms"), (int, float))
+            and not isinstance(value.get("latency_ms"), bool)
         ]
         costs = [
             float(value["cost_usd"])
@@ -229,7 +230,12 @@ def write_report(
     *, run_dir: str | Path, manifest: Mapping[str, Any]
 ) -> tuple[Path, Path]:
     directory = Path(run_dir)
-    loaded = load_observations(directory / "observations.jsonl")
+    observations_path = directory / "observations.jsonl"
+    if not observations_path.is_file():
+        raise FileNotFoundError(
+            f"missing run file: {observations_path}"
+        )
+    loaded = load_observations(observations_path)
     profiles_path = directory / "profiles.json"
     profiles: dict[str, dict[str, Any]] = {}
     if profiles_path.exists():
