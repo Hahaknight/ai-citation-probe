@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -11,6 +12,7 @@ from . import __version__
 from .manifest import build_manifest
 from .probe_set import load_probe_set
 from .providers.perplexity import PerplexityProvider
+from .report import write_report
 from .runner import run_probe_set
 
 
@@ -42,6 +44,10 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="NAME=VALUE",
         help="probe template slot value; repeat as needed",
     )
+    report = subparsers.add_parser(
+        "report", help="render CSV/HTML from a recorded run"
+    )
+    report.add_argument("--run-dir", required=True)
     return parser
 
 
@@ -75,6 +81,11 @@ def _run(args: argparse.Namespace) -> int:
     )
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "profiles.json").write_text(
+        json.dumps(profiles.get("providers", []), ensure_ascii=False, indent=2)
+        + "\n",
+        encoding="utf-8",
+    )
     (output_dir / "manifest.json").write_text(
         json.dumps(manifest.to_dict(), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -97,4 +108,18 @@ def main() -> int:
         return 0
     if args.command == "run":
         return _run(args)
+    if args.command == "report":
+        try:
+            manifest = json.loads(
+                (Path(args.run_dir) / "manifest.json").read_text(encoding="utf-8")
+            )
+            csv_path, html_path = write_report(
+                run_dir=args.run_dir, manifest=manifest
+            )
+        except (FileNotFoundError, json.JSONDecodeError) as error:
+            print(f"error: cannot render report: {error}", file=sys.stderr)
+            return 2
+        print(csv_path)
+        print(html_path)
+        return 0
     return 1

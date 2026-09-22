@@ -6,4 +6,6 @@ dist/
 build/
 runs/
 reports/
+examples/offline-run/summary.csv
+examples/offline-run/report.html
 .env
