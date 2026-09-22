@@ -1,0 +1,101 @@
+# probe-set.yaml — 探针集即协议(schema 草案 v0.1)
+# 项目名: ai-citation-probe(2026-09-22 owner 拍板, 原 TBD 占位名已替换)
+# canonical 宿主: https://github.com/Hahaknight/ai-citation-probe (M1 已建, public/MIT);
+# 本文件后续 PR 化入库, 入库前以本目录为权威版本。
+# Owner 槽位: Hermes(Phase 2 方法论即产品); 实现 review: codex_PM
+#
+# ── 协议规则(与 run manifest 的集成, 采纳 Claude_engineer 2026-09-21 集成点) ──
+# 1. 版本化: 本文件 semver 版本化, 任何问题增/删/改必须 bump 并走 PR 审查。
+# 2. 哈希规范: canonical_hash = sha256(JSON 规范化字节流)。
+#    规范化定义(2026-09-21 按 Claude_engineer review 必改1 修正, 弃 YAML 文本规范化 — YAML emitter
+#    序列化不唯一, 跨实现哈希会漂移, 正是本项目要消灭的工具噪声):
+#    解析后结构删除 canonical_hash 字段本身 -> JSON 序列化(sort_keys=true, 紧凑分隔符,
+#    ensure_ascii=false; 对齐 RFC 8785 JCS) -> UTF-8 -> sha256。Python/Go/JS 实现结果一致。
+#    手写无效, 由工具(CI / CLI schema validate)自动计算并校验。
+# 3. 成对写入: run manifest 必须同时记录 (version, canonical_hash) 二元组。
+#    只存 hash -> 报告读不出协议版本; 只存 version -> 改了 yaml 忘 bump 发现不了。
+# 4. 强校验: 报告生成时, manifest 中 version+hash 与实际 probe-set.yaml 不匹配 => 直接报错,
+#    拒绝出报告(此条建议进 M1 验收)。
+# 5. 版本号写进每份报告的 header, 否则跨时间对比无效。
+
+meta:
+  schema: probe-set/0.1
+  version: 0.1.1            # semver: 加问题 = minor, 改措辞/删问题 = major(破坏跨时间可比性)
+  canonical_hash: "22cdd49ef0cb0d00a0d6e049ca66bd474ce94f953360506b3955069d0574ae42"  # sha256(JSON 规范化), 本字段自身不进哈希输入; CI 以重算为准
+  license: CC-BY-4.0        # 探针集本身开放 — 方法论即产品
+  maintainers: []
+  changelog:
+    - version: 0.1.1
+      date: "2026-09-21"
+      note: "review 修正: canonical_hash 改 JSON 规范化(RFC 8785 对齐); 修 q-generic-001 注释 mojibake; 跨版本对比限定共同 question id 子集"
+    - version: 0.1.0
+      date: "2026-09-21"
+      note: "初始骨架, 4 个种子问题(仅示意元数据结构, 非最终入选集)"
+
+defaults:
+  language: zh-CN           # 每题可覆盖
+  region: CN
+  samples_per_run: 3        # 一致性评分最低需要 >=2 次采样, 推荐 3
+  temperature: 0            # 固定参数进 run manifest, 不在问题级覆盖
+
+# ── 问题条目结构 ──
+# slots: 文本模板槽位, 渲染时注入被测品牌/竞品, 保证同一问题跨品牌可比
+# comparable_providers: 声明该题结果在哪些 provider 之间可比(跨引擎一致性只对声明可比的题计算)
+# consumer_surface: direct/partial/proxy/no — 该题测的是否接近真实消费者侧 AI 搜索行为
+#   (裸 ChatGPT API 不开 search = 测模型能力, 不是测 AI 搜索可见度; 对齐 codex_PM 的
+#    search_mode / consumer_surface_equivalence provider 矩阵字段)
+# inclusion_reason: 入选理由必填 — 没有理由的问题不配进协议
+questions:
+  - id: q-fintech-001
+    text: "{brand} 和 {competitor_1} 哪个手续费更低?"
+    industry: fintech
+    intent: transactional    # informational / transactional / navigational / comparison
+    language: zh-CN
+    region: CN
+    slots: [brand, competitor_1]
+    comparable_providers: [perplexity-sonar, gemini-grounding]
+    consumer_surface: direct
+    inclusion_reason: "交易型查询是需求下滑最陡的类目(Fractl 2026-07 实测 -34%), 首批垂直下注方向"
+    added_in: 0.1.0
+
+  - id: q-fintech-002
+    text: "用 {brand} 换汇有什么风险?"
+    industry: fintech
+    intent: informational
+    language: zh-CN
+    region: CN
+    slots: [brand]
+    comparable_providers: [perplexity-sonar, gemini-grounding]
+    consumer_surface: direct
+    inclusion_reason: "信息型查询下滑较缓(-19%), 与交易型对照可分离行业效应与意图效应"
+    added_in: 0.1.0
+
+  - id: q-saas-001
+    text: "{brand} 和 {competitor_1} 哪个更适合小团队?"
+    industry: saas-b2b
+    intent: comparison
+    language: en
+    region: US
+    slots: [brand, competitor_1]
+    comparable_providers: [perplexity-sonar, gemini-grounding]
+    consumer_surface: direct
+    inclusion_reason: "B2B 高客单信息密集行业, GEO 需求最先显现的垂直(白皮书引用数据同源)"
+    added_in: 0.1.0
+
+  - id: q-generic-001
+    text: "{brand} 是什么?"
+    industry: generic
+    intent: navigational
+    language: zh-CN
+    region: CN
+    slots: [brand]
+    comparable_providers: [chatgpt-nosearch, perplexity-sonar, gemini-grounding]
+    consumer_surface: partial   # 品牌导航类(navigational)查询在裸模型上也有意义
+    inclusion_reason: "品牌实体基线题: 所有引擎都应能回答, 引用异常即测量管路报警器"
+    added_in: 0.1.0
+
+# ── 变更流程(PR 走查清单) ──
+# 1. 改问题 => bump version + 填 changelog + 每题 inclusion_reason
+# 2. CI: schema validate + canonical_hash 重算 + 全量问题跑一次冒烟(防措辞改动改变语义)
+# 3. PR 标签: add-question / reword / remove — reword/remove 视为破坏性, 默认 major bump
+# 4. 禁止: 收录付费植入问题; 收录仅在单一 provider 上有意义的措辞; 无理由条目
