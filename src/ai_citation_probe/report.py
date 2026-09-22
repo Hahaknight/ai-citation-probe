@@ -116,7 +116,9 @@ def summarize_observations(
                 "total_cost_usd": sum(costs) or None,
                 "total_tokens": tokens,
                 "mean_latency_ms": (
-                    round(sum(latencies) / len(latencies)) if latencies else None
+                    round(sum(latencies) / len(latencies), 3)
+                    if latencies
+                    else None
                 ),
             }
         )
